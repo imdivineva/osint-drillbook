@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OSINT DRILLBOOK — Practice Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --olive:#4a5240;
+    --olive-dark:#2a2f20;
+    --olive-light:#6a7660;
+    --khaki:#d4c4a0;
+    --khaki-dark:#b4a480;
+    --paper:#f5f0e0;
+    --ink:#1a1810;
+    --ink-2:#4a4438;
+    --ink-3:#8a8470;
+    --red:#b83838;
+    --amber:#d48838;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{
+    background:var(--khaki);color:var(--ink);
+    font-family:'Courier Prime',monospace;font-size:14px;line-height:1.6;
+    min-height:100vh;
+  }
+  body{
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(42,47,32,0.03) 19px, rgba(42,47,32,0.03) 20px);
+  }
+  ::selection{background:var(--olive);color:var(--paper)}
+  button,input,select,textarea{font-family:inherit}
+  button{cursor:pointer}
+
+  /* Header */
+  .header{
+    background:var(--olive-dark);color:var(--khaki);
+    padding:16px 32px;border-bottom:3px solid var(--olive);
+    position:sticky;top:0;z-index:30;
+    box-shadow:0 4px 0 var(--olive);
+  }
+  .header-row{display:flex;justify-content:space-between;align-items:center;max-width:1200px;margin:0 auto;gap:20px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand-mark{
+    width:44px;height:44px;background:var(--amber);
+    border:3px solid var(--olive-dark);position:relative;
+    display:grid;place-items:center;font-family:'Special Elite';
+    font-size:20px;font-weight:700;color:var(--olive-dark);
+  }
+  .brand-mark::before{
+    content:"";position:absolute;inset:-6px;
+    border:2px solid var(--olive);
+  }
+  .brand h1{font-family:'Special Elite';font-size:22px;letter-spacing:.15em;text-transform:uppercase}
+  .brand small{font-family:'Roboto Mono';font-size:10px;letter-spacing:.3em;text-transform:uppercase;opacity:.7;margin-top:2px;display:block}
+  .header-meta{font-family:'Roboto Mono';font-size:11px;letter-spacing:.1em;text-align:right}
+  .header-meta span{display:block;opacity:.8}
+  .header-meta b{color:var(--amber);opacity:1}
+
+  /* Nav tabs */
+  .tabs{
+    background:var(--olive);border-bottom:2px solid var(--olive-dark);
+    display:flex;gap:0;padding:0 32px;max-width:1200px;margin:0 auto;
+  }
+  .tab{
+    background:transparent;border:none;color:var(--khaki-dark);
+    padding:12px 22px;font-family:'Special Elite';font-size:13px;
+    text-transform:uppercase;letter-spacing:.1em;border-bottom:3px solid transparent;
+    margin-bottom:-2px;
+  }
+  .tab:hover{color:var(--khaki);background:rgba(255,255,255,0.05)}
+  .tab.active{color:var(--amber);border-color:var(--amber);background:rgba(212,136,56,0.1)}
+  .tab .badge{
+    display:inline-block;background:var(--amber);color:var(--olive-dark);
+    padding:1px 6px;border-radius:2px;font-family:'Roboto Mono';
+    font-size:10px;margin-left:6px;font-weight:700;
+  }
+
+  /* Main */
+  .main{max-width:1200px;margin:0 auto;padding:32px 32px 80px}
+
+  /* Section header */
+  .section-h{
+    border:3px solid var(--olive);background:var(--paper);
+    padding:18px 24px;margin-bottom:24px;position:relative;
+  }
+  .section-h::before,.section-h::after{
+    content:"";position:absolute;width:12px;height:12px;
+    border:2px solid var(--olive);
+  }
+  .section-h::before{top:-2px;left:-2px;border-right:none;border-bottom:none}
+  .section-h::after{bottom:-2px;right:-2px;border-left:none;border-top:none}
+  .section-title{
+    font-family:'Special Elite';font-size:24px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--olive-dark);margin-bottom:6px;
+  }
+  .section-sub{font-size:13px;color:var(--ink-2);line-height:1.5}
+
+  /* Drill card */
+  .drills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+  .drill{
+    background:var(--paper);border:2px solid var(--olive);
+    padding:18px 20px;position:relative;transition:.15s;
+  }
+  .drill:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--olive)}
+  .drill::before{
+    content:"";position:absolute;top:-1px;left:-1px;
+    width:16px;height:16px;background:var(--olive);
+  }
+  .drill-freq{
+    font-family:'Roboto Mono';font-size:10px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--olive);font-weight:700;
+    margin-bottom:8px;
+  }
+  .drill-freq.daily{color:var(--red)}
+  .drill-freq.weekly{color:var(--amber)}
+  .drill-freq.monthly{color:var(--olive-light)}
+  .drill-freq.quarterly{color:var(--ink-3)}
+
+  .drill-title{
+    font-family:'Special Elite';font-size:16px;letter-spacing:.05em;
+    color:var(--ink);margin-bottom:8px;line-height:1.3;
+  }
+  .drill-desc{font-size:13px;color:var(--ink-2);line-height:1.5;margin-bottom:12px}
+  .drill-why{
+    background:rgba(74,82,64,0.08);padding:10px 12px;
+    font-size:12px;color:var(--ink-2);line-height:1.5;
+    border-left:3px solid var(--olive);margin-bottom:12px;
+  }
+  .drill-why::before{content:"WHY: ";font-weight:700;color:var(--olive)}
+
+  .drill-status{
+    display:flex;justify-content:space-between;align-items:center;
+    padding-top:12px;border-top:2px solid var(--khaki-dark);
+  }
+  .drill-check{
+    display:flex;align-items:center;gap:8px;font-size:12px;
+    color:var(--ink-2);font-family:'Roboto Mono';
+  }
+  .drill-checkbox{
+    width:20px;height:20px;border:2px solid var(--olive);
+    background:var(--paper);cursor:pointer;display:grid;place-items:center;
+    font-size:14px;color:var(--olive-dark);font-weight:700;
+  }
+  .drill-checkbox.done{background:var(--olive);color:var(--khaki)}
+  .drill-checkbox.done::after{content:"✓"}
+
+  .drill-streak{
+    font-family:'Roboto Mono';font-size:11px;color:var(--olive);
+    font-weight:700;letter-spacing:.05em;
+  }
+  .drill-streak.active{color:var(--amber)}
+
+  /* Stats bar */
+  .stats{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:2px;background:var(--olive);margin-bottom:28px;
+    border:2px solid var(--olive);
+  }
+  .stat{background:var(--paper);padding:16px 20px;position:relative}
+  .stat::before{
+    content:"";position:absolute;top:0;left:0;
+    width:4px;height:100%;background:var(--olive);
+  }
+  .stat-label{
+    font-family:'Roboto Mono';font-size:10px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--ink-3);margin-bottom:4px;
+  }
+  .stat-val{
+    font-family:'Special Elite';font-size:28px;color:var(--olive-dark);
+    letter-spacing:-.02em;
+  }
+  .stat-val.amber{color:var(--amber)}
+  .stat-val.red{color:var(--red)}
+
+  /* Guide section */
+  .guide{
+    background:var(--paper);border:3px solid var(--olive-dark);
+    padding:24px 28px;margin-top:32px;position:relative;
+  }
+  .guide::before{
+    content:"FIELD NOTES";position:absolute;top:-12px;left:20px;
+    background:var(--olive-dark);color:var(--khaki);
+    padding:2px 12px;font-family:'Roboto Mono';font-size:10px;
+    letter-spacing:.2em;font-weight:700;
+  }
+  .guide h3{
+    font-family:'Special Elite';font-size:18px;letter-spacing:.1em;
+    text-transform:uppercase;margin-bottom:16px;color:var(--olive-dark);
+  }
+  .guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+  .guide-item{display:flex;gap:12px}
+  .guide-num{
+    width:28px;height:28px;background:var(--olive-dark);color:var(--khaki);
+    display:grid;place-items:center;font-family:'Roboto Mono';
+    font-size:14px;font-weight:700;flex-shrink:0;
+  }
+  .guide-text h4{
+    font-family:'Special Elite';font-size:14px;margin-bottom:4px;
+    color:var(--olive-dark);letter-spacing:.05em;
+  }
+  .guide-text p{font-size:13px;color:var(--ink-2);line-height:1.5}
+
+  /* Add button */
+  .add-drill-btn{
+    background:var(--amber);color:var(--olive-dark);border:2px solid var(--olive-dark);
+    padding:12px 24px;font-family:'Special Elite';font-size:14px;
+    text-transform:uppercase;letter-spacing:.1em;font-weight:700;
+    margin-bottom:24px;display:inline-flex;align-items:center;gap:8px;
+  }
+  .add-drill-btn:hover{background:var(--olive-dark);color:var(--amber)}
+
+  /* Modal */
+  .modal-bg{
+    position:fixed;inset:0;background:rgba(26,24,16,0.8);
+    z-index:100;display:none;align-items:center;justify-content:center;padding:30px;
+  }
+  .modal-bg.show{display:flex}
+  .modal{
+    background:var(--paper);border:4px solid var(--olive-dark);
+    max-width:600px;width:100%;max-height:90vh;overflow-y:auto;
+    position:relative;
+  }
+  .modal::before,.modal::after{
+    content:"";position:absolute;width:20px;height:20px;
+    border:3px solid var(--amber);
+  }
+  .modal::before{top:-3px;left:-3px;border-right:none;border-bottom:none}
+  .modal::after{bottom:-3px;right:-3px;border-left:none;border-top:none}
+  .modal-h{
+    background:var(--olive-dark);color:var(--khaki);padding:16px 24px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .modal-h h2{font-family:'Special Elite';font-size:18px;letter-spacing:.15em;text-transform:uppercase}
+  .modal-close{
+    background:transparent;border:2px solid var(--khaki);color:var(--khaki);
+    width:32px;height:32px;font-size:18px;font-weight:700;
+  }
+  .modal-close:hover{background:var(--khaki);color:var(--olive-dark)}
+  .modal-body{padding:24px}
+  .form-row{margin-bottom:16px}
+  .form-row label{
+    display:block;font-family:'Roboto Mono';font-size:11px;
+    letter-spacing:.15em;text-transform:uppercase;color:var(--olive);
+    margin-bottom:6px;font-weight:700;
+  }
+  .form-row input,.form-row select,.form-row textarea{
+    width:100%;background:var(--khaki);border:2px solid var(--olive);
+    padding:10px 12px;color:var(--ink);font-size:14px;
+  }
+  .form-row input:focus,.form-row select:focus,.form-row textarea:focus{
+    outline:none;border-color:var(--olive-dark);background:var(--paper);
+  }
+  .form-row textarea{min-height:70px;resize:vertical;font-family:inherit}
+  .modal-actions{
+    display:flex;gap:10px;justify-content:flex-end;margin-top:20px;
+    padding-top:20px;border-top:2px solid var(--khaki-dark);
+  }
+  .btn-secondary{
+    background:transparent;border:2px solid var(--olive);color:var(--olive);
+    padding:10px 20px;font-family:'Special Elite';font-size:12px;
+    text-transform:uppercase;letter-spacing:.1em;
+  }
+  .btn-secondary:hover{background:var(--olive);color:var(--paper)}
+  .btn-primary{
+    background:var(--amber);border:2px solid var(--olive-dark);color:var(--olive-dark);
+    padding:10px 24px;font-family:'Special Elite';font-size:12px;
+    text-transform:uppercase;letter-spacing:.1em;font-weight:700;
+  }
+  .btn-primary:hover{background:var(--olive-dark);color:var(--amber)}
+
+  /* Toast */
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--olive-dark);color:var(--khaki);
+    padding:12px 24px;font-family:'Roboto Mono';font-size:12px;
+    letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+    border:2px solid var(--amber);z-index:200;opacity:0;transition:opacity .3s;
+  }
+  .toast.show{opacity:1}
+
+  .empty{
+    text-align:center;padding:60px 30px;
+    font-family:'Special Elite';color:var(--ink-3);font-size:16px;
+    letter-spacing:.05em;
+  }
+  .empty::before{content:"◆";display:block;font-size:32px;margin-bottom:12px;color:var(--khaki-dark)}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-row">
+    <div class="brand">
+      <div class="brand-mark">◆</div>
+      <div>
+        <h1>OSINT DRILLBOOK</h1>
+        <small>Tactical Practice Protocol</small>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span id="dateLine">—</span>
+      <span>ACTIVE DRILLS: <b id="activeDrills">0</b></span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-view="all">ALL DRILLS <span class="badge" id="badge-all">0</span></button>
+  <button class="tab" data-view="daily">DAILY <span class="badge" id="badge-daily">0</span></button>
+  <button class="tab" data-view="weekly">WEEKLY <span class="badge" id="badge-weekly">0</span></button>
+  <button class="tab" data-view="monthly">MONTHLY <span class="badge" id="badge-monthly">0</span></button>
+  <button class="tab" data-view="quarterly">QUARTERLY <span class="badge" id="badge-quarterly">0</span></button>
+</nav>
+
+<main class="main">
+  <div class="section-h">
+    <h2 class="section-title">PRACTICE PROTOCOL</h2>
+    <p class="section-sub">OSINT skills degrade without regular exercise. This drillbook tracks daily, weekly, monthly, and quarterly practice routines to maintain operational readiness. Check off drills as you complete them. Streaks measure consistency.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">TOTAL DRILLS</div>
+      <div class="stat-val" id="statTotal">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">DONE TODAY</div>
+      <div class="stat-val amber" id="statToday">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">THIS WEEK</div>
+      <div class="stat-val" id="statWeek">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">LONGEST STREAK</div>
+      <div class="stat-val amber" id="statStreak">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">ALL-TIME REPS</div>
+      <div class="stat-val" id="statReps">0</div>
+    </div>
+  </div>
+
+  <button class="add-drill-btn" id="addDrillBtn">＋ ADD CUSTOM DRILL</button>
+
+  <div class="drills-grid" id="drillsList"></div>
+
+  <div class="guide">
+    <h3>FIELD NOTES: BUILDING AN OSINT PRACTICE</h3>
+    <div class="guide-grid">
+      <div class="guide-item">
+        <div class="guide-num">1</div>
+        <div class="guide-text">
+          <h4>START WITH DAILY REPS</h4>
+          <p>5-10 minute drills you can do every day. Think warm-ups: reverse image search, WHOIS lookup, quick geolocation. Build the habit first.</p>
+        </div>
+      </div>
+      <div class="guide-item">
+        <div class="guide-num">2</div>
+        <div class="guide-text">
+          <h4>WEEKLY DEEP DIVES</h4>
+          <p>Set aside 30-60 minutes for structured investigations. Pick a random person/company, build a full profile. Document your process.</p>
+        </div>
+      </div>
+      <div class="guide-item">
+        <div class="guide-num">3</div>
+        <div class="guide-text">
+          <h4>MONTHLY SKILL AUDITS</h4>
+          <p>Test new tools, review techniques you've neglected, update your toolkit. The OSINT landscape changes fast.</p>
+        </div>
+      </div>
+      <div class="guide-item">
+        <div class="guide-num">4</div>
+        <div class="guide-text">
+          <h4>TRACK YOUR STREAKS</h4>
+          <p>Consistency beats intensity. A 7-day streak of 10-minute drills builds more skill than sporadic 3-hour sessions.</p>
+        </div>
+      </div>
+      <div class="guide-item">
+        <div class="guide-num">5</div>
+        <div class="guide-text">
+          <h4>DOCUMENT EVERYTHING</h4>
+          <p>Keep a logbook (digital or physical). What worked? What failed? Which source was most reliable? Review quarterly.</p>
+        </div>
+      </div>
+      <div class="guide-item">
+        <div class="guide-num">6</div>
+        <div class="guide-text">
+          <h4>JOIN A COMMUNITY</h4>
+          <p>Trace Labs CTFs, OSINT Curious Discord, Bellingcat's workshops. Learning alone is slow. Learning together is exponential.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-h">
+      <h2>＋ NEW DRILL</h2>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Drill Title</label>
+        <input type="text" id="m-title" placeholder="e.g. Reverse image search practice">
+      </div>
+      <div class="form-row">
+        <label>Frequency</label>
+        <select id="m-freq">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly / Annual</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Description (what to do)</label>
+        <textarea id="m-desc" placeholder="Pick 3 random images from news sites, run through Google/Yandex/TinEye..."></textarea>
+      </div>
+      <div class="form-row">
+        <label>Why it matters (optional)</label>
+        <textarea id="m-why" placeholder="Keeps reverse-search skills sharp for verifying image sources in investigations..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" data-close>CANCEL</button>
+        <button class="btn-primary" id="saveDrillBtn">SAVE DRILL</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">—</div>
+
+<script>
+const KEY = "osint.drills";
+const LOG_KEY = "osint.log";
+
+let drills = JSON.parse(localStorage.getItem(KEY) || "[]");
+let log = JSON.parse(localStorage.getItem(LOG_KEY) || "{}");
+let activeView = "all";
+let editingId = null;
+
+const FREQ_LABEL = { daily:"DAILY", weekly:"WEEKLY", monthly:"MONTHLY", quarterly:"QUARTERLY" };
+
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(drills));
+  localStorage.setItem(LOG_KEY, JSON.stringify(log));
+}
+
+function todayStr(d = new Date()){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function seedDrills(){
+  const samples = [
+    { title:"Reverse image search drill", freq:"daily", desc:"Pick 3 random images from news sites. Run through Google Images, Yandex, TinEye. Compare results. Note which engine finds the original source first.", why:"Keeps your reverse-search skills sharp for verifying image sources in breaking-news investigations." },
+    { title:"WHOIS & DNS lookup", freq:"daily", desc:"Choose a random company website. Run WHOIS lookup, check DNS records, identify registrar and nameservers. Note privacy protection status.", why:"Understanding domain infrastructure is foundational for mapping organizational networks and verifying legitimacy." },
+    { title:"Social media username pivot", freq:"daily", desc:"Pick a random username you encounter. Run it through Sherlock or WhatsMyName. See how many platforms use that handle. Check for cross-platform patterns.", why:"Usernames are one of the strongest pivots in OSINT — same handle across platforms often reveals the same person." },
+    { title:"Geolocation challenge", freq:"weekly", desc:"Use Bellingcat's Geolocating Quizzes or pick a random street-view image. Identify country, city, and exact location using visual clues, shadows, language, architecture.", why:"Geolocation is a core OSINT skill. Weekly practice keeps your eye trained for terrain, infrastructure, and cultural markers." },
+    { title:"Person profile from scratch", freq:"weekly", desc:"Pick a random LinkedIn profile (someone you don't know). Build a full profile using only public sources: previous employers, education, social media, articles they've written, conferences attended.", why:"End-to-end person investigations test every skill: social media pivots, company lookups, archive searches, and synthesis." },
+    { title:"Company deep dive", freq:"weekly", desc:"Choose a mid-sized company. Map their leadership, find SEC filings (if public), identify subsidiaries, check Glassdoor reviews, find recent news. Build an org chart.", why:"Corporate OSINT combines people, documents, and financial data. Weekly practice keeps you fluent in navigating business records." },
+    { title:"Wayback Machine archaeology", freq:"weekly", desc:"Pick a random website that's been around 10+ years. Use archive.org to see how it's changed. Look for deleted pages, old contact info, or organizational shifts.", why:"The Wayback Machine catches what's been scrubbed. Weekly practice trains you to spot what disappeared and why." },
+    { title:"Tool audit: test something new", freq:"monthly", desc:"Pick one OSINT tool you've never used (from OSINT Framework or a recent blog post). Run it through its paces. Document what it does well and where it fails.", why:"The OSINT toolkit changes constantly. Monthly audits keep you current and prevent over-reliance on outdated methods." },
+    { title:"Red-team your own OPSEC", freq:"monthly", desc:"Search for yourself. What can you find? Google your name, username, email. Check data-broker sites. What's out there that shouldn't be?", why:"You can't protect others' privacy if you don't know how exposed you are. Monthly checks reveal new leaks." },
+    { title:"Case study: replay a known investigation", freq:"monthly", desc:"Pick a published Bellingcat investigation. Follow their methodology step-by-step using the same tools. See if you reach the same conclusions.", why:"Learning from real investigations is the fastest way to level up. Monthly replays teach you how pros structure their research." },
+    { title:"OSINT CTF or challenge", freq:"monthly", desc:"Participate in Trace Labs, a Twitter OSINT challenge, or any timed competition. Push yourself under time pressure.", why:"Competitions force you out of research rabbit holes. They teach you to prioritize, document fast, and deliver results." },
+    { title:"Quarterly skill review & gaps", freq:"quarterly", desc:"Review your drill log. Which skills have you neglected? Which tools have you avoided? Which investigations felt hardest? Identify 2-3 gaps to focus on next quarter.", why:"Deliberate practice requires honest self-assessment. Quarterly reviews keep your training targeted, not scattered." },
+    { title:"Update your toolkit & bookmarks", freq:"quarterly", desc:"Go through your OSINT bookmarks, browser extensions, and saved tools. Remove dead links. Add new tools from recent blog posts. Reorganize for faster access.", why:"Dead tools waste time mid-investigation. Quarterly cleanups keep your toolkit lean and current." },
+  ];
+
+  samples.forEach(s => {
+    drills.push({
+      id: Date.now() + Math.random(),
+      createdAt: Date.now(),
+      ...s
+    });
+  });
+  save();
+}
+
+if(drills.length === 0){
+  seedDrills();
+}
+
+function escapeHTML(s){ if(s == null) return ""; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function isDoneToday(drillId){
+  return (log[drillId] || []).includes(todayStr());
+}
+
+function toggle(drillId){
+  if(!log[drillId]) log[drillId] = [];
+  const ds = todayStr();
+  const idx = log[drillId].indexOf(ds);
+  if(idx >= 0) log[drillId].splice(idx, 1);
+  else log[drillId].push(ds);
+  save(); render();
+}
+
+function streakOf(drillId){
+  const entries = new Set(log[drillId] || []);
+  let s = 0;
+  for(let i = 0; i < 365; i++){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    if(entries.has(todayStr(d))) s++;
+    else if(i === 0) continue;
+    else break;
+  }
+  return s;
+}
+
+function render(){
+  const now = new Date();
+  document.getElementById('dateLine').textContent = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' }).toUpperCase();
+
+  const byCat = { daily:0, weekly:0, monthly:0, quarterly:0 };
+  drills.forEach(d => byCat[d.freq] = (byCat[d.freq]||0) + 1);
+  document.getElementById('badge-all').textContent = drills.length;
+  ['daily','weekly','monthly','quarterly'].forEach(f => document.getElementById('badge-'+f).textContent = byCat[f] || 0);
+
+  let toShow = drills.filter(d => activeView === "all" || d.freq === activeView);
+
+  const list = document.getElementById('drillsList');
+  if(toShow.length === 0){
+    list.innerHTML = `<div class="empty">NO DRILLS IN THIS CATEGORY. ADD ONE ABOVE.</div>`;
+  } else {
+    list.innerHTML = toShow.map(d => {
+      const done = isDoneToday(d.id);
+      const s = streakOf(d.id);
+      return `<div class="drill">
+        <div class="drill-freq ${d.freq}">${FREQ_LABEL[d.freq]}</div>
+        <div class="drill-title">${escapeHTML(d.title)}</div>
+        <div class="drill-desc">${escapeHTML(d.desc)}</div>
+        ${d.why ? `<div class="drill-why">${escapeHTML(d.why)}</div>` : ""}
+        <div class="drill-status">
+          <div class="drill-check">
+            <div class="drill-checkbox ${done?'done':''}" data-toggle="${d.id}"></div>
+            <span>DONE TODAY</span>
+          </div>
+          <div class="drill-streak ${s>0?'active':''}">
+            ${s > 0 ? `${s} DAY${s===1?'':'S'} STREAK` : "NO STREAK"}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    list.querySelectorAll('[data-toggle]').forEach(el => el.addEventListener('click', () => toggle(+el.dataset.toggle)));
+  }
+
+  const todayDone = drills.filter(d => isDoneToday(d.id)).length;
+  const weekDone = drills.reduce((s, d) => {
+    const entries = log[d.id] || [];
+    const sow = new Date(); sow.setDate(sow.getDate() - sow.getDay()); sow.setHours(0,0,0,0);
+    return s + entries.filter(ds => new Date(ds) >= sow).length;
+  }, 0);
+  const maxStreak = Math.max(0, ...drills.map(d => streakOf(d.id)));
+  const allReps = Object.values(log).reduce((s, e) => s + e.length, 0);
+
+  document.getElementById('statTotal').textContent = drills.length;
+  document.getElementById('statToday').textContent = todayDone;
+  document.getElementById('statWeek').textContent = weekDone;
+  document.getElementById('statStreak').textContent = maxStreak;
+  document.getElementById('statReps').textContent = allReps;
+  document.getElementById('activeDrills').textContent = drills.length;
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === activeView));
+}
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  activeView = t.dataset.view;
+  render();
+}));
+
+const modal = document.getElementById('modal');
+document.getElementById('addDrillBtn').addEventListener('click', () => {
+  editingId = null;
+  ['m-title','m-desc','m-why'].forEach(id => document.getElementById(id).value = "");
+  document.getElementById('m-freq').value = "daily";
+  modal.classList.add('show');
+});
+
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => modal.classList.remove('show')));
+
+document.getElementById('saveDrillBtn').addEventListener('click', () => {
+  const title = document.getElementById('m-title').value.trim();
+  if(!title){ alert("Give it a title."); return; }
+  drills.push({
+    id: Date.now() + Math.random(),
+    createdAt: Date.now(),
+    title,
+    freq: document.getElementById('m-freq').value,
+    desc: document.getElementById('m-desc').value.trim(),
+    why: document.getElementById('m-why').value.trim(),
+  });
+  save(); render();
+  modal.classList.remove('show');
+  toast("DRILL ADDED");
+});
+
+const toastEl = document.getElementById('toast');
+function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), 1800); }
+
+render();
+</script>
+</body>
+</html>
