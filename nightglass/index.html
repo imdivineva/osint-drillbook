@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NIGHTGLASS // OSINT Resource Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d0c; --bg-2:#0f1413; --ink:#d8ffe8; --dim:#5a7a6a;
+    --acc:#7cff9e; --warn:#ffb84a; --crit:#ff5b6a;
+    --line:rgba(124,255,158,0.14); --line-2:rgba(124,255,158,0.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.5;min-height:100vh}
+  body{
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124,255,158,0.08), transparent 60%),
+      linear-gradient(var(--line-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-2) 1px, transparent 1px);
+    background-size: 100% 100%, 32px 32px, 32px 32px;
+  }
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 3px);mix-blend-mode:multiply;opacity:.5}
+  ::selection{background:var(--acc);color:#0a0d0c}
+  a{color:inherit;text-decoration:none}
+
+  .topbar{position:sticky;top:0;z-index:30;backdrop-filter:blur(8px);background:rgba(10,13,12,0.85);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:14px 28px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{width:34px;height:34px;border:1px solid var(--acc);position:relative;display:grid;place-items:center}
+  .logo::before,.logo::after{content:"";position:absolute;background:var(--acc)}
+  .logo::before{width:18px;height:1px;animation:scan 2.4s linear infinite}
+  .logo::after{width:1px;height:18px}
+  @keyframes scan{0%{transform:translateY(-9px)}50%{transform:translateY(9px)}100%{transform:translateY(-9px)}}
+  .brand h1{font-family:'Space Mono';font-size:15px;letter-spacing:.32em;font-weight:700}
+  .brand h1 span{color:var(--acc)}
+  .brand small{display:block;font-size:9px;color:var(--dim);letter-spacing:.4em;margin-top:2px}
+  .status{display:flex;gap:24px;align-items:center;font-size:11px;color:var(--dim)}
+  .status b{color:var(--ink);font-weight:400}
+  .pulse{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc);animation:pulse 1.6s ease-in-out infinite;margin-right:6px;vertical-align:middle}
+  @keyframes pulse{50%{opacity:.3;transform:scale(.85)}}
+
+  .hero{padding:48px 28px 28px;max-width:1400px;margin:0 auto}
+  .crumb{font-size:10px;color:var(--dim);letter-spacing:.3em;margin-bottom:18px}
+  .crumb span{color:var(--acc)}
+  .hero-title{font-family:'Space Mono';font-size:clamp(32px,5vw,56px);font-weight:700;letter-spacing:-.02em;line-height:.95;margin-bottom:8px}
+  .hero-title .glitch{color:var(--acc)}
+  .hero-sub{color:var(--dim);font-size:12px;letter-spacing:.15em;margin-bottom:34px;max-width:680px;line-height:1.7}
+  .hero-sub b{color:var(--warn)}
+
+  .query-box{border:1px solid var(--line);background:var(--bg-2);position:relative;box-shadow:0 0 0 1px rgba(124,255,158,0.04), 0 20px 60px rgba(0,0,0,0.5)}
+  .query-box::before{content:"";position:absolute;top:-1px;left:-1px;width:24px;height:24px;border-top:1px solid var(--acc);border-left:1px solid var(--acc)}
+  .query-box::after{content:"";position:absolute;bottom:-1px;right:-1px;width:24px;height:24px;border-bottom:1px solid var(--acc);border-right:1px solid var(--acc)}
+  .query-tabs{display:flex;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .qtab{padding:12px 22px;font-size:10px;letter-spacing:.3em;color:var(--dim);border-right:1px solid var(--line);cursor:pointer;transition:.2s;background:transparent;border-top:none;border-bottom:none;border-left:none;font-family:inherit}
+  .qtab.active{color:var(--acc);background:rgba(124,255,158,0.05)}
+  .qtab:hover{color:var(--ink)}
+  .query-input-row{display:flex;align-items:center;gap:14px;padding:18px 22px}
+  .prompt{color:var(--acc);font-weight:700}
+  .qinput{flex:1;background:transparent;border:none;outline:none;color:var(--ink);font-family:inherit;font-size:16px;letter-spacing:.02em}
+  .qinput::placeholder{color:var(--dim)}
+  .runbtn{background:var(--acc);color:#0a0d0c;border:none;padding:10px 20px;font-family:inherit;font-weight:700;font-size:11px;letter-spacing:.3em;cursor:pointer;transition:.15s}
+  .runbtn:hover{background:#fff;box-shadow:0 0 24px var(--acc)}
+
+  .legal{margin-top:18px;padding:14px 18px;border:1px solid var(--warn);background:rgba(255,184,74,0.04);font-size:11px;color:var(--ink);line-height:1.7}
+  .legal b{color:var(--warn);letter-spacing:.2em}
+
+  .grid{max-width:1400px;margin:0 auto;padding:32px 28px 80px;display:grid;grid-template-columns:1fr;gap:24px}
+  .panel{border:1px solid var(--line);background:var(--bg-2);position:relative}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.3em;color:var(--dim)}
+  .panel-head b{color:var(--acc);font-weight:400}
+  .panel-head .num{color:var(--ink)}
+
+  .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1px;background:var(--line)}
+  .res-card{background:var(--bg-2);padding:18px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:8px}
+  .res-card:hover{background:rgba(124,255,158,0.04)}
+  .res-cat{font-size:9px;letter-spacing:.3em;color:var(--acc)}
+  .res-cat.paid{color:var(--warn)}
+  .res-cat.video{color:#7ec8ff}
+  .res-cat.book{color:#ff9eb5}
+  .res-cat.tool{color:var(--acc)}
+  .res-cat.community{color:#c89eff}
+  .res-name{font-family:'Space Mono';font-size:15px;font-weight:700;letter-spacing:-.01em}
+  .res-desc{font-size:11px;color:var(--ink);line-height:1.55;flex:1}
+  .res-meta{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.2em;color:var(--dim);margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2)}
+  .res-meta a{color:var(--acc)}
+  .res-meta a:hover{text-decoration:underline}
+
+  .empty{padding:60px 24px;text-align:center;color:var(--dim);font-size:12px;letter-spacing:.2em}
+  .empty b{color:var(--acc);display:block;font-size:14px;margin-bottom:8px}
+
+  .hud{position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(10,13,12,0.92);backdrop-filter:blur(8px);border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:8px 28px;font-size:10px;letter-spacing:.3em;color:var(--dim)}
+  .hud b{color:var(--acc);font-weight:400}
+  .hud-cmd::after{content:"_";animation:blink 1s steps(2) infinite;color:var(--acc)}
+  @keyframes blink{50%{opacity:0}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="logo"></div>
+    <div>
+      <h1>NIGHT<span>GLASS</span></h1>
+      <small>OSINT // RESOURCE CONSOLE</small>
+    </div>
+  </div>
+  <div class="status">
+    <span><span class="pulse"></span>MODE <b>ADVISORY</b></span>
+    <span>REGION <b>US</b></span>
+    <span id="clock">UTC --:--:--</span>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="crumb">CONSOLE / INVESTIGATIONS / <span>RESOURCE LOOKUP</span></div>
+  <h2 class="hero-title">SUBJECT <span class="glitch">RECON</span></h2>
+  <p class="hero-sub">// CURATED OSINT RESOURCES FOR U.S. INVESTIGATIONS &mdash; LEARNING PATHS, FREE TOOLS, CREDIBLE PAID SERVICES, BOOKS, AND COMMUNITIES. <b>NIGHTGLASS DOES NOT QUERY PEOPLE-SEARCH SITES OR RETURN PERSONAL DATA</b> &mdash; IT POINTS YOU TO LEGITIMATE RESOURCES YOU CAN VET YOURSELF.</p>
+
+  <div class="query-box">
+    <div class="query-tabs" id="tabs">
+      <button class="qtab active" data-cat="person">PEOPLE SEARCH</button>
+      <button class="qtab" data-cat="domain">DOMAINS &amp; WEB</button>
+      <button class="qtab" data-cat="email">EMAILS</button>
+      <button class="qtab" data-cat="phone">PHONE NUMBERS</button>
+      <button class="qtab" data-cat="username">USERNAMES &amp; SOCIAL</button>
+      <button class="qtab" data-cat="image">IMAGES &amp; FACES</button>
+      <button class="qtab" data-cat="business">BUSINESS &amp; CORP</button>
+      <button class="qtab" data-cat="court">COURT &amp; PUBLIC RECORDS</button>
+      <button class="qtab" data-cat="learn">LEARNING PATHS</button>
+    </div>
+    <div class="query-input-row">
+      <span class="prompt">&gt;</span>
+      <input class="qinput" id="search" placeholder="filter resources by keyword (e.g. 'free', 'tutorial', 'background check')...">
+      <button class="runbtn" id="runBtn">FILTER</button>
+    </div>
+  </div>
+
+  <div class="legal">
+    <b>LEGAL &amp; ETHICAL NOTICE</b><br>
+    OSINT in the U.S. is governed by laws including the FCRA (15 U.S.C. § 1681), GLBA, DPPA, and state privacy statutes. Using consumer data for employment, tenancy, or credit decisions requires an FCRA-compliant Consumer Reporting Agency &mdash; not OSINT tools. Stalking, harassment, and unauthorized access to protected systems are crimes. Always verify a resource's terms of service before use. Nightglass is an educational directory, not an investigation service.
+  </div>
+</section>
+
+<main class="grid">
+  <section class="panel">
+    <div class="panel-head"><span><b>01</b> RECOMMENDED RESOURCES</span><span class="num" id="resultCount">— RECORDS</span></div>
+    <div class="results-grid" id="results"></div>
+  </section>
+</main>
+
+<div class="hud">
+  <div><span>ENTRIES <b id="totalCount">0</b></span> &nbsp;·&nbsp; <span>SHOWING <b id="visibleCount">0</b></span></div>
+  <span class="hud-cmd">awaiting input</span>
+</div>
+
+<script>
+// =========================================================================
+// NIGHTGLASS RESOURCE DATABASE — curated, US-focused, hand-built
+// Categories: person | domain | email | phone | username | image | business | court | learn
+// Types: tool (free) | paid | video | book | community
+// =========================================================================
+
+const DB = [
+  // --- PEOPLE SEARCH ---
+  { cat:"person", type:"tool", name:"FamilyTreeNow", desc:"Free public-records people search. Pulls from voter rolls, property records, and relatives. Has an opt-out form. Useful starting point for genealogy and finding lost relatives.", url:"https://www.familytreenow.com/", note:"FREE · US ONLY" },
+  { cat:"person", type:"tool", name:"That'sThem", desc:"Free reverse lookup for names, phones, emails, and addresses. Aggregates public records. Less complete than paid services but a solid free option.", url:"https://thatsthem.com/", note:"FREE" },
+  { cat:"person", type:"tool", name:"FastPeopleSearch", desc:"Free people-search aggregator pulling from public records. Often shows associates and prior addresses. Has an opt-out.", url:"https://www.fastpeoplesearch.com/", note:"FREE" },
+  { cat:"person", type:"paid", name:"BeenVerified", desc:"Subscription background-check service. NOT FCRA-compliant — cannot be used for employment, tenancy, or credit. Useful for personal due diligence.", url:"https://www.beenverified.com/", note:"~$28/mo" },
+  { cat:"person", type:"paid", name:"Spokeo", desc:"Mainstream people-search aggregator. Same FCRA caveat. Decent UI for non-technical users.", url:"https://www.spokeo.com/", note:"~$20/mo" },
+  { cat:"person", type:"paid", name:"Whitepages Premium", desc:"Established U.S. directory with paid premium tier for cell phone lookups and background snapshots.", url:"https://www.whitepages.com/", note:"PAID TIERS" },
+  { cat:"person", type:"video", name:"The OSINT Curious Project (YouTube)", desc:"High-quality OSINT tutorials and webinars run by working investigators. Excellent for people-search methodology, not just tools.", url:"https://www.youtube.com/@OSINTCurious", note:"FREE" },
+  { cat:"person", type:"video", name:"Michael Bazzell — IntelTechniques", desc:"Foremost U.S. OSINT educator. YouTube content + the IntelTechniques.com Search Tools page (a free dashboard of OSINT links).", url:"https://inteltechniques.com/tools/", note:"FREE TOOLS" },
+  { cat:"person", type:"book", name:"Open Source Intelligence Techniques (Bazzell)", desc:"The standard reference, updated regularly. Covers people search, social media, and digital privacy. ~$40 paperback.", url:"https://inteltechniques.com/book1.html", note:"BOOK" },
+  { cat:"person", type:"community", name:"r/OSINT (Reddit)", desc:"Active community. Good for asking 'is this tool legit?' and seeing what working investigators currently use.", url:"https://www.reddit.com/r/OSINT/", note:"FREE" },
+
+  // --- DOMAINS & WEB ---
+  { cat:"domain", type:"tool", name:"Wayback Machine", desc:"Internet Archive's snapshot history. See how a website looked years ago — often catches deleted pages, old contact info, and pricing changes.", url:"https://web.archive.org/", note:"FREE" },
+  { cat:"domain", type:"tool", name:"WHOIS (ICANN Lookup)", desc:"Domain registration records. Most are GDPR-redacted now, but still useful for creation date, registrar, and nameservers.", url:"https://lookup.icann.org/", note:"FREE" },
+  { cat:"domain", type:"tool", name:"crt.sh", desc:"Free certificate transparency log search. Find subdomains by searching SSL cert history. Powerful for mapping infrastructure.", url:"https://crt.sh/", note:"FREE" },
+  { cat:"domain", type:"tool", name:"Shodan", desc:"Search engine for internet-connected devices. Free tier is limited; great for understanding what's exposed on a domain.", url:"https://www.shodan.io/", note:"FREE TIER" },
+  { cat:"domain", type:"tool", name:"BuiltWith", desc:"Identifies the tech stack of any website (analytics, frameworks, CDNs). Free for basic lookups.", url:"https://builtwith.com/", note:"FREE TIER" },
+  { cat:"domain", type:"tool", name:"VirusTotal", desc:"Submit a URL or domain — get scans from dozens of security vendors plus passive DNS history. Free without an account.", url:"https://www.virustotal.com/", note:"FREE" },
+  { cat:"domain", type:"tool", name:"URLScan.io", desc:"Submit any URL — get a screenshot, network requests, redirect chain, and tech fingerprint. Public results are searchable.", url:"https://urlscan.io/", note:"FREE" },
+  { cat:"domain", type:"video", name:"NahamSec — Recon Series", desc:"YouTube series on bug-bounty recon that doubles as excellent OSINT/domain mapping training.", url:"https://www.youtube.com/@NahamSec", note:"FREE" },
+  { cat:"domain", type:"book", name:"Hacking: The Art of Exploitation (Erickson)", desc:"Foundational book — not OSINT-specific, but the network/web chapters give you the mental model for everything domain-related.", url:"https://nostarch.com/hacking2.htm", note:"BOOK" },
+
+  // --- EMAILS ---
+  { cat:"email", type:"tool", name:"Have I Been Pwned", desc:"Troy Hunt's free breach-check. Type an email — see which data breaches it appeared in. Critical first stop.", url:"https://haveibeenpwned.com/", note:"FREE" },
+  { cat:"email", type:"tool", name:"Hunter.io", desc:"Find email addresses associated with a company domain. Free tier: 25 lookups/month. Used heavily in sales but excellent for OSINT.", url:"https://hunter.io/", note:"FREE TIER" },
+  { cat:"email", type:"tool", name:"EmailRep.io", desc:"Reputation lookup for email addresses — does it appear in breaches, public profiles, suspicious lists?", url:"https://emailrep.io/", note:"FREE" },
+  { cat:"email", type:"tool", name:"Epieos", desc:"Reverse-email lookup that checks Google, Skype, and other services for accounts tied to an address. Free with rate limits.", url:"https://epieos.com/", note:"FREE TIER" },
+  { cat:"email", type:"video", name:"OSINT Dojo — Email Techniques", desc:"Free tutorials covering email-based investigations including Gmail account ID extraction.", url:"https://www.osintdojo.com/", note:"FREE" },
+  { cat:"email", type:"community", name:"Trace Labs", desc:"Volunteer org running OSINT CTFs to find missing persons. Their training resources include strong email/social investigation content.", url:"https://www.tracelabs.org/", note:"FREE" },
+
+  // --- PHONE NUMBERS ---
+  { cat:"phone", type:"tool", name:"NumLookup", desc:"Free U.S. phone reverse lookup. Decent for landlines; mobile coverage is patchy.", url:"https://www.numlookup.com/", note:"FREE" },
+  { cat:"phone", type:"tool", name:"Truecaller", desc:"Crowdsourced caller-ID database. Free with account. Good for spam/scam identification.", url:"https://www.truecaller.com/", note:"FREE / PAID" },
+  { cat:"phone", type:"paid", name:"PhoneValidator (Pro)", desc:"Carrier and line-type lookup. Paid API; useful for verifying whether a number is mobile, VoIP, or landline.", url:"https://www.phonevalidator.com/", note:"PAID" },
+  { cat:"phone", type:"tool", name:"FreeCarrierLookup", desc:"Free carrier and line-type lookup. Quick way to spot VoIP numbers (Google Voice, Twilio).", url:"https://freecarrierlookup.com/", note:"FREE" },
+  { cat:"phone", type:"video", name:"OSINTion — Phone Investigation", desc:"Tutorial walkthroughs on phone-number OSINT, including SMS-based account discovery.", url:"https://www.youtube.com/@TheOSINTion", note:"FREE" },
+
+  // --- USERNAMES & SOCIAL ---
+  { cat:"username", type:"tool", name:"Sherlock", desc:"Open-source command-line tool. Checks 400+ sites for a given username. The classic. Run locally — your queries don't go to a third party.", url:"https://github.com/sherlock-project/sherlock", note:"FREE · CLI" },
+  { cat:"username", type:"tool", name:"WhatsMyName", desc:"Web-based username enumeration. Newer and arguably more accurate than Sherlock for some sites.", url:"https://whatsmyname.app/", note:"FREE" },
+  { cat:"username", type:"tool", name:"Namechk", desc:"Username and domain availability checker — also useful as an OSINT pivot to see where a handle is taken.", url:"https://namechk.com/", note:"FREE" },
+  { cat:"username", type:"tool", name:"SocialBlade", desc:"Public stats for YouTube, Twitch, Twitter, Instagram accounts. Useful for vetting influencers and tracking growth patterns.", url:"https://socialblade.com/", note:"FREE TIER" },
+  { cat:"username", type:"tool", name:"Snscrape", desc:"Open-source scraper for old social-media posts (Twitter, Reddit, etc). Some platforms have throttled it heavily — check current status.", url:"https://github.com/JustAnotherArchivist/snscrape", note:"FREE · CLI" },
+  { cat:"username", type:"video", name:"Heath Adams (TCM Security) — OSINT course", desc:"Affordable practical OSINT course on TCM Academy plus free YouTube intros. Strong on social-media investigation.", url:"https://academy.tcm-sec.com/", note:"FREE PREVIEW" },
+
+  // --- IMAGES & FACES ---
+  { cat:"image", type:"tool", name:"Google Images (reverse search)", desc:"The default. Drag any image into images.google.com. Now powered by Google Lens.", url:"https://images.google.com/", note:"FREE" },
+  { cat:"image", type:"tool", name:"TinEye", desc:"Reverse-image search focused on finding the earliest/original instance of an image. Often catches things Google misses.", url:"https://tineye.com/", note:"FREE" },
+  { cat:"image", type:"tool", name:"Yandex Images", desc:"Russian search engine — widely considered the best for face matching and finding obscure image sources, especially Eastern European content.", url:"https://yandex.com/images/", note:"FREE" },
+  { cat:"image", type:"tool", name:"PimEyes", desc:"Face-search engine. Powerful and controversial. Free tier shows partial results; full results paid. Heavily debated for privacy reasons.", url:"https://pimeyes.com/", note:"FREE TIER · PAID" },
+  { cat:"image", type:"tool", name:"FotoForensics", desc:"Image forensics — Error Level Analysis (ELA), metadata extraction, clone detection. Free for casual use.", url:"https://fotoforensics.com/", note:"FREE" },
+  { cat:"image", type:"tool", name:"ExifTool", desc:"Industry-standard CLI for reading/writing image metadata (EXIF). Free and open-source.", url:"https://exiftool.org/", note:"FREE · CLI" },
+  { cat:"image", type:"video", name:"Bellingcat — Geolocation Tutorials", desc:"Bellingcat's YouTube channel and Discord teach the gold-standard methodology for image geolocation. Used in real journalism.", url:"https://www.youtube.com/@Bellingcat", note:"FREE" },
+  { cat:"image", type:"book", name:"Bellingcat's Online Investigation Toolkit", desc:"Free, regularly-updated public Google Doc listing every tool Bellingcat investigators use. Bookmark it.", url:"https://docs.google.com/spreadsheets/d/18rtqh8EG2q1xBo2cLNyhIDuK9jrPGwYr9DI2UncoqJQ/", note:"FREE · LIVE DOC" },
+
+  // --- BUSINESS & CORPORATE ---
+  { cat:"business", type:"tool", name:"SEC EDGAR", desc:"The U.S. SEC's filing database. Every public company's 10-K, 10-Q, 8-K. Free, official, the source of truth.", url:"https://www.sec.gov/edgar/search/", note:"FREE · OFFICIAL" },
+  { cat:"business", type:"tool", name:"OpenCorporates", desc:"Largest open database of corporate registrations worldwide. Strong U.S. state coverage. Free for casual use.", url:"https://opencorporates.com/", note:"FREE TIER" },
+  { cat:"business", type:"tool", name:"State Secretary of State portals", desc:"Each U.S. state has a free business-entity search (e.g. Delaware, California, NY). The authoritative source for LLC ownership and registered agents.", url:"https://www.sos.state.us/", note:"FREE · STATE-BY-STATE" },
+  { cat:"business", type:"tool", name:"USPTO TESS / Patents", desc:"U.S. Patent and Trademark Office search — trademarks, patents, assignments. Reveals brand strategy and inventor networks.", url:"https://www.uspto.gov/trademarks-application-process/search-trademark-database", note:"FREE · OFFICIAL" },
+  { cat:"business", type:"tool", name:"ProPublica Nonprofit Explorer", desc:"Searchable IRS Form 990 filings for U.S. nonprofits. See who runs them, what they pay, who they grant to.", url:"https://projects.propublica.org/nonprofits/", note:"FREE" },
+  { cat:"business", type:"paid", name:"PitchBook / Crunchbase", desc:"Startup and VC databases. Crunchbase has a free tier; PitchBook is enterprise-priced but the gold standard.", url:"https://www.crunchbase.com/", note:"FREE TIER / PAID" },
+  { cat:"business", type:"tool", name:"FinCEN BOI Search (when available)", desc:"The Beneficial Ownership Information registry. Access has been litigated — check current status. Designed to expose shell-company owners.", url:"https://www.fincen.gov/boi", note:"OFFICIAL · STATUS-DEPENDENT" },
+
+  // --- COURT & PUBLIC RECORDS ---
+  { cat:"court", type:"tool", name:"PACER", desc:"Federal court records system. Pay-per-page (~$0.10) but free quarterly searches. Authoritative for federal civil/criminal/bankruptcy.", url:"https://pacer.uscourts.gov/", note:"PAY-PER-PAGE" },
+  { cat:"court", type:"tool", name:"CourtListener / RECAP", desc:"Free Software Freedom Conservancy project. Aggregates federal court documents pulled from PACER. Often free what costs money on PACER.", url:"https://www.courtlistener.com/", note:"FREE" },
+  { cat:"court", type:"tool", name:"Justia", desc:"Free aggregator of court opinions, statutes, and dockets. Strong appellate coverage.", url:"https://www.justia.com/", note:"FREE" },
+  { cat:"court", type:"tool", name:"State court portals", desc:"Each U.S. state has its own court records system (often county-level). Coverage and fees vary wildly. NCSC maintains a directory.", url:"https://www.ncsc.org/information-and-resources/browse-by-state/state-court-websites", note:"FREE · STATE-BY-STATE" },
+  { cat:"court", type:"tool", name:"BRB Publications Free Public Records", desc:"Long-running directory of free public-record sources by state and county. Old-school but comprehensive.", url:"https://www.brbpublications.com/freeresources/pubrecsites.aspx", note:"FREE · DIRECTORY" },
+  { cat:"court", type:"tool", name:"FOIA.gov", desc:"Submit federal Freedom of Information Act requests. For state agencies, each state has its own public-records law.", url:"https://www.foia.gov/", note:"FREE · OFFICIAL" },
+  { cat:"court", type:"tool", name:"MuckRock", desc:"Public-records request platform with templates and a public archive of past responses. Excellent for first-time requesters.", url:"https://www.muckrock.com/", note:"FREE TIER" },
+  { cat:"court", type:"video", name:"IRE — Investigative Reporters & Editors", desc:"IRE's training (some free, members-only) is the gold standard for U.S. public-records investigation.", url:"https://www.ire.org/training/", note:"FREE PREVIEW · MEMBER" },
+
+  // --- LEARNING PATHS ---
+  { cat:"learn", type:"video", name:"OSINT Framework", desc:"Free interactive directory of OSINT tools organized by data type. The classic starting point. Updated regularly.", url:"https://osintframework.com/", note:"FREE" },
+  { cat:"learn", type:"video", name:"SANS — SEC487 OSINT preview", desc:"SANS course is expensive (~$8K) but they release free webcasts and posters. Highest-end professional OSINT training.", url:"https://www.sans.org/cyber-security-courses/open-source-intelligence-gathering/", note:"FREE PREVIEWS · PAID FULL" },
+  { cat:"learn", type:"video", name:"My OSINT Training (Griffin Glynn)", desc:"Free practical YouTube channel by a working OSINT trainer. Up-to-date with the current tooling landscape.", url:"https://www.youtube.com/@MyOSINTTraining", note:"FREE" },
+  { cat:"learn", type:"book", name:"Hunchly", desc:"Not a book — a Chrome extension that auto-saves every page you visit during an investigation. Paid (~$130/yr) but unmatched for case-building.", url:"https://www.hunch.ly/", note:"PAID" },
+  { cat:"learn", type:"community", name:"OSINT Combine — Free tools", desc:"Australian firm that publishes a free tools page and well-regarded paid training. Their free content is generous.", url:"https://www.osintcombine.com/tools", note:"FREE TOOLS" },
+  { cat:"learn", type:"community", name:"DEF CON Recon Village", desc:"DEF CON's OSINT-focused village. Conference talks are posted to YouTube free annually.", url:"https://www.youtube.com/@DEFCONConference", note:"FREE TALKS" },
+  { cat:"learn", type:"book", name:"Deep Dive: Exploring the Real-World Value of OSINT (Hetherington)", desc:"~$50 book. Practical case studies for U.S. investigators — fraud, due diligence, missing persons.", url:"https://www.hetheringtongroup.com/publications/", note:"BOOK" },
+  { cat:"learn", type:"community", name:"OSINT Curious Discord", desc:"Active community of working investigators. Linked from osintcurio.us. Best place to ask current-tooling questions.", url:"https://osintcurio.us/", note:"FREE" },
+];
+
+// =========================================================================
+// RENDERING
+// =========================================================================
+const TYPE_LABEL = {
+  tool:"FREE TOOL", paid:"PAID SERVICE", video:"TUTORIAL / VIDEO",
+  book:"BOOK / GUIDE", community:"COMMUNITY"
+};
+
+const els = {
+  results: document.getElementById('results'),
+  search: document.getElementById('search'),
+  tabs: document.getElementById('tabs'),
+  resultCount: document.getElementById('resultCount'),
+  totalCount: document.getElementById('totalCount'),
+  visibleCount: document.getElementById('visibleCount'),
+  runBtn: document.getElementById('runBtn'),
+  clock: document.getElementById('clock'),
+};
+
+let activeCat = "person";
+let filterText = "";
+
+function render(){
+  const filtered = DB.filter(r =>
+    r.cat === activeCat &&
+    (!filterText || (r.name + r.desc + r.note).toLowerCase().includes(filterText.toLowerCase()))
+  );
+  els.results.innerHTML = "";
+  if(filtered.length === 0){
+    els.results.innerHTML = `<div class="empty" style="grid-column:1/-1"><b>NO MATCHES</b>try a different category or clear the filter</div>`;
+  } else {
+    filtered.forEach(r => {
+      const card = document.createElement('a');
+      card.href = r.url;
+      card.target = "_blank";
+      card.rel = "noopener noreferrer";
+      card.className = "res-card";
+      card.innerHTML = `
+        <div class="res-cat ${r.type}">${TYPE_LABEL[r.type]}</div>
+        <div class="res-name">${r.name}</div>
+        <div class="res-desc">${r.desc}</div>
+        <div class="res-meta">
+          <span>${r.note}</span>
+          <span>OPEN ↗</span>
+        </div>`;
+      els.results.appendChild(card);
+    });
+  }
+  els.resultCount.textContent = `${filtered.length} RECORDS`;
+  els.visibleCount.textContent = filtered.length;
+  els.totalCount.textContent = DB.length;
+}
+
+els.tabs.addEventListener('click', e => {
+  const btn = e.target.closest('.qtab');
+  if(!btn) return;
+  document.querySelectorAll('.qtab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  activeCat = btn.dataset.cat;
+  render();
+});
+
+els.search.addEventListener('input', e => {
+  filterText = e.target.value;
+  render();
+});
+els.runBtn.addEventListener('click', () => {
+  filterText = els.search.value;
+  render();
+});
+
+// Clock
+function tick(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  els.clock.innerHTML = `UTC <b>${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}</b>`;
+}
+setInterval(tick, 1000); tick();
+
+render();
+</script>
+</body>
+</html>
